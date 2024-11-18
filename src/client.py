@@ -13,7 +13,7 @@ class GoogleAPIClient:
             'https://www.googleapis.com/auth/spreadsheets.readonly'
         ]
         self.credentials = credentials
-        )
+        
         self.drive_service = build('drive', 'v3', credentials=self.credentials)
         self.sheets_service = build('sheets', 'v4', credentials=self.credentials)
         
