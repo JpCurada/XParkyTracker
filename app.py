@@ -61,7 +61,7 @@ def load_config():
     config = {
         'credentials_path': os.getenv('GOOGLE_CREDENTIALS_PATH'),
         'classroom_folder_id': st.secrets["CLASSROOM_FOLDER_ID"],
-        'eval_forms_folder_id': st.secrets["EVAL_FORMS_FOLDER_ID'"]
+        'eval_forms_folder_id': st.secrets["EVAL_FORMS_FOLDER_ID"]
     }
     
     if missing_vars := [key for key, value in config.items() if not value]:
