@@ -59,7 +59,7 @@ def load_config():
     load_dotenv()
     
     config = {
-        'credentials_path': os.getenv('GOOGLE_CREDENTIALS_PATH'),
+        'credentials_path': st.secrets["GOOGLE_CREDENTIALS"],
         'classroom_folder_id': st.secrets["CLASSROOM_FOLDER_ID"],
         'eval_forms_folder_id': st.secrets["EVAL_FORMS_FOLDER_ID"]
     }
