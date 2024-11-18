@@ -147,7 +147,7 @@ def main():
     init_streamlit()
     
     # Display header
-    st.image('assets\web-header.svg')
+    st.image('assets/web-header.svg')
     
     # Get configuration
     config = load_config()
