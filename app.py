@@ -74,7 +74,12 @@ def fetch_data(config):
     """Fetch and process XParky data"""
     try:
         with st.spinner('Loading data...'):
-            client = GoogleAPIClient(config['credentials_path'])
+            credentials = service_account.Credentials.from_service_account_info(
+                config['credentials'],
+                scopes=['https://www.googleapis.com/auth/drive.readonly',
+                       'https://www.googleapis.com/auth/spreadsheets.readonly']
+            )
+            client = GoogleAPIClient(credentials)  
             processor = XParkyProcessor(client)
             
             final_df, _, _ = processor.process_all_data(
