@@ -106,7 +106,14 @@ class XParkyProcessor:
     
     def process_classroom_submission(self, folder_id: str) -> pd.DataFrame:
         """Process classroom submissions and calculate points."""
-        files = self.client.list_files_in_folder(folder_id)
+        folders = self.client.list_files_in_folder(folder_id)
+
+        classroom_submission_folders_id = [folder_dict['id'] for folder_dict in folder if folder_dict['name'].strip() != 'evaluationForms']
+        
+        files = []
+        for folder_id in classroom_submission_folders_id: 
+            files.insert(self.client.list_files_in_folder(folder_id))
+        
         points_dict = {}
         
         for file_info in files:
