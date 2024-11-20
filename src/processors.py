@@ -112,7 +112,7 @@ class XParkyProcessor:
         
         files = []
         for folder_id in classroom_submission_folders_id: 
-            files.insert(self.client.list_files_in_folder(folder_id))
+            files.extend(self.client.list_files_in_folder(folder_id))
         
         points_dict = {}
         
