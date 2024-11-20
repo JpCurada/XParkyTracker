@@ -137,7 +137,7 @@ def display_xparky_table(df: pd.DataFrame):
         hide_index=True,
         use_container_width=True,
         disabled=True,
-        height=500
+
     )
 
     # Download button
