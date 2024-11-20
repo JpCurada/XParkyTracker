@@ -113,10 +113,10 @@ streamlit run app.py
 
 ### Point System Configuration
 Points are awarded for different achievements:
-- Certificates: [points value]
-- Badges: [points value]
-- Projects: [points value]
-- Other activities: [points value]
+- Certificates: 100
+- Badges: 100
+- Projects: 150
+- Attendance/Answers Eval Forms: 200
 
 ### Adding New Features
 1. Create feature branch
