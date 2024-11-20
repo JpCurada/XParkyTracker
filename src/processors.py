@@ -108,7 +108,7 @@ class XParkyProcessor:
         """Process classroom submissions and calculate points."""
         folders = self.client.list_files_in_folder(folder_id)
 
-        classroom_submission_folders_id = [folder_dict['id'] for folder_dict in folder if folder_dict['name'].strip() != 'evaluationForms']
+        classroom_submission_folders_id = [folder_dict['id'] for folder_dict in folders if folder_dict['name'].strip() != 'evaluationForms']
         
         files = []
         for folder_id in classroom_submission_folders_id: 
