@@ -28,6 +28,7 @@ class XParkyProcessor:
                 return None
                 
             # Clean the data
+            df = df[df["Position"] == "Data and ML Cadet"] # Ensure that only Data and ML cadets are included
             df['Student Number'] = df['Student Number'].astype(str).str.strip()
             df['First Name'] = df['First Name'].str.strip()
             df['Last Name'] = df['Last Name'].str.strip()
@@ -46,6 +47,7 @@ class XParkyProcessor:
         try:
             # Get student database
             db_df = self.get_student_database()
+        
             if db_df is None:
                 return points_df
             
