@@ -1,4 +1,4 @@
-# XParkyTracker
+# XParky Tracker
 ## Experience Points (XP) Tracking System for Data and ML Cadets
 
 XParkyTracker is a Streamlit-based web application designed to track and manage experience points (XP) for Data and Machine Learning Cadets participating in Google Developer Group On Campus PUP's learning programs.
@@ -25,22 +25,21 @@ XParkyTracker simplifies the process of tracking learner progress and achievemen
 ## Features
 
 ### XP Tracking
-- **Certificate Tracking**: Record and validate completed certifications
+- **Certificate Tracking**: Record and validate completed certificates
 - **Badge Management**: Track earned badges from learning platforms
 - **Project Submissions**: Monitor and grade project submissions
 - **Point Calculation**: Automated XP calculation based on achievements
 - **Progress Dashboard**: Visual representation of cadet progress
 
 ### Administrative Features
-- **Cadet Management**: Add and manage cadet profiles
 - **Achievement Verification**: Validate submitted certificates and badges
 - **Points Configuration**: Customize point values for different achievements
 - **Progress Reports**: Generate individual and group progress reports
 
 ## Technology Stack
 - **Frontend & Backend**: Streamlit
-- **Programming Language**: Python 3.x
-- **Data Processing**: Pandas
+- **Programming Language**: Python 3.9
+- **Data Processing**: Pandas 
 - **Development Environment**: Dev Container support
 - **Version Control**: Git
 
@@ -86,7 +85,7 @@ XParkyTracker/
 
 4. Configure Google Sheets credentials:
    - Set up Google Cloud Project
-   - Enable Google Sheets API
+   - Enable Google Sheets API and Google Drive API 
    - Configure credentials
    - Set environment variables for authentication
 
