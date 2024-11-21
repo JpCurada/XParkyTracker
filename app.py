@@ -162,7 +162,12 @@ def main():
     df = fetch_data(config)
 
     col1, col2, col3 = st.columns([1,3,1])
-    col2.display_xparky_table(df)
+    with col1:
+        st.empty()
+    with col2:
+        display_xparky_table(df)
+    with col3:
+        st.empty()
 
 if __name__ == "__main__":
     main()
