@@ -161,7 +161,8 @@ def main():
     # Fetch and display data
     df = fetch_data(config)
 
-    display_xparky_table(df)
+    col1, col2, col3 = st.columns([1,3,1])
+    col2.display_xparky_table(df)
 
 if __name__ == "__main__":
     main()
