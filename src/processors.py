@@ -117,17 +117,12 @@ class XParkyProcessor:
             files.extend(self.client.list_files_in_folder(folder_id))
         
         points_dict = {}
+
+        unique_file_names = list(set([file_info['name'] for file_info in files]))
         
-        processed_file_names = set()  # Track processed file names
-        
-        for file_info in files:
+        for file_name in unique_file_names:
             try:
-                file_name = file_info['name'].upper()
-                
-                # Skip if already processed this file name
-                if file_name in processed_file_names:
-                    continue
-                    
+                file_name = file_name.upper()
                 if not any(keyword in file_name for keyword in ['CERTIFICATE', 'BADGE', 'PROJECT']):
                     continue
                 
@@ -136,11 +131,10 @@ class XParkyProcessor:
                          else self.points.CERTIFICATE_BADGE)
                 
                 points_dict[student_number] = points_dict.get(student_number, 0) + points
-                processed_file_names.add(file_name)  # Mark as processed
                 
             except Exception as e:
-                print(f"Error processing {file_info['name']}: {str(e)}")
-                
+                print(f"Error processing {file_name}: {str(e)}")
+                    
         return self._create_points_dataframe(points_dict)
     
     def _create_points_dataframe(self, points_dict: Dict) -> pd.DataFrame:
