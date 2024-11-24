@@ -117,8 +117,6 @@ class XParkyProcessor:
             files.extend(self.client.list_files_in_folder(folder_id))
         
         points_dict = {}
-
-        files = list(set(files))
         
         for file_info in files:
             try:
