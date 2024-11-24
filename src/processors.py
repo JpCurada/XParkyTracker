@@ -118,9 +118,16 @@ class XParkyProcessor:
         
         points_dict = {}
         
+        processed_file_names = set()  # Track processed file names
+        
         for file_info in files:
             try:
                 file_name = file_info['name'].upper()
+                
+                # Skip if already processed this file name
+                if file_name in processed_file_names:
+                    continue
+                    
                 if not any(keyword in file_name for keyword in ['CERTIFICATE', 'BADGE', 'PROJECT']):
                     continue
                 
@@ -129,6 +136,7 @@ class XParkyProcessor:
                          else self.points.CERTIFICATE_BADGE)
                 
                 points_dict[student_number] = points_dict.get(student_number, 0) + points
+                processed_file_names.add(file_name)  # Mark as processed
                 
             except Exception as e:
                 print(f"Error processing {file_info['name']}: {str(e)}")
