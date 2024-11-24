@@ -117,6 +117,8 @@ class XParkyProcessor:
             files.extend(self.client.list_files_in_folder(folder_id))
         
         points_dict = {}
+
+        files = files = list(dict.fromkeys([file for file in files if file])) 
         
         for file_info in files:
             try:
