@@ -118,7 +118,7 @@ class XParkyProcessor:
         
         points_dict = {}
 
-        files = files = list(dict.fromkeys([file for file in files if file])) 
+        files = list(set(files))
         
         for file_info in files:
             try:
