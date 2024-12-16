@@ -203,7 +203,7 @@ def main():
     config = load_config()
     
     # Initialize clients and processors
-    client = client = GoogleAPIClient(st.secrets["GOOGLE_CREDENTIALS"])
+    client = GoogleAPIClient(st.secrets["GOOGLE_CREDENTIALS"])
     xparky_processor = XParkyProcessor(client)
     cert_processor = CertificateProcessor(client)
     
