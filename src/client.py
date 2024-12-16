@@ -6,14 +6,15 @@ from typing import Optional, List, Dict
 class GoogleAPIClient:
     """Client for accessing Google Drive and Sheets APIs."""
     
-    def __init__(self, credentials):
+    def __init__(self, credentials_path: str):
         """Initialize Google API client with service account credentials."""
         self.SCOPES = [
             'https://www.googleapis.com/auth/drive.readonly',
             'https://www.googleapis.com/auth/spreadsheets.readonly'
         ]
-        self.credentials = credentials
-        
+        self.credentials = service_account.Credentials.from_service_account_file(
+            credentials_path, scopes=self.SCOPES
+        )
         self.drive_service = build('drive', 'v3', credentials=self.credentials)
         self.sheets_service = build('sheets', 'v4', credentials=self.credentials)
         
