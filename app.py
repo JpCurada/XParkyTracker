@@ -201,16 +201,66 @@ def main():
     # Get configuration
     config = load_config()
     
-    # Fetch and display data
-    df = fetch_data(config)
-
-    col1, col2, col3 = st.columns([1,3,1])
-    with col1:
-        st.empty()
-    with col2:
-        display_xparky_table(df)
-    with col3:
-        st.empty()
+    # Initialize clients and processors
+    client = GoogleAPIClient(config['credentials_path'])
+    xparky_processor = XParkyProcessor(client)
+    cert_processor = CertificateProcessor(client)
+    
+    # Create tabs
+    tab1, tab2 = st.tabs(["XParky Points", "Certificates"])
+    
+    with tab1:
+        # XParky points functionality
+        col1, col2, col3 = st.columns([1,3,1])
+        with col2:
+            df = fetch_data(config)
+            display_xparky_table(df)
+    
+    with tab2:
+        col1_, col2_, col3_ = st.columns([1,3,1])
+        with col2_:
+            # Get event folders
+            event_folders = get_event_folders(cert_processor, config['certificates_main_folder_id'])
+            
+            if not event_folders:
+                st.error("No event folders found.")
+                return
+                
+            # Event selection
+            event_names = sorted(event_folders.keys())
+            selected_event = st.selectbox(
+                "Select Event",
+                options=event_names,
+                index=None,
+                placeholder="Choose an event..."
+            )
+            
+            if selected_event:
+                # Get certificates for selected event
+                certificates = get_certificates_for_event(
+                    cert_processor, 
+                    event_folders[selected_event]
+                )
+                
+                if not certificates:
+                    st.warning("No certificates found for this event.")
+                    return
+                    
+                # Name selection
+                available_names = sorted(cert_processor.get_available_names(certificates))
+                selected_name = st.selectbox(
+                    "Enter your Name",
+                    options=available_names,
+                    index=None,
+                    placeholder="Choose your name..."
+                )
+                
+                if selected_name:
+                    file_id = certificates.get(selected_name.lower())
+                    if file_id:
+                        display_certificate(client, file_id, selected_name)
+                    else:
+                        st.error("Certificate not found. Please contact support.")
 
 if __name__ == "__main__":
     main()
