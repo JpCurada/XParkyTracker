@@ -69,11 +69,12 @@ def init_streamlit():
 def load_config():
     """Load and validate environment variables"""
     load_dotenv()
-    
+
     config = {
-        'credentials_path': st.secrets['GOOGLE_CREDENTIALS'],
-        'classroom_folder_id': st.secrets['CLASSROOM_FOLDER_ID'],
-        'eval_forms_folder_id': st.secrets['EVAL_FORMS_FOLDER_ID'],
+        'credentials_path': st.secrets["GOOGLE_CREDENTIALS"],
+        'credentials': st.secrets["GOOGLE_CREDENTIALS"],
+        'classroom_folder_id': st.secrets["CLASSROOM_FOLDER_ID"],
+        'eval_forms_folder_id': st.secrets["EVAL_FORMS_FOLDER_ID"],
         'certificates_main_folder_id': st.secrets['CERTIFICATES_FOLDER_ID']  # Main Certificates folder ID
     }
     
@@ -86,7 +87,12 @@ def fetch_data(config):
     """Fetch and process XParky data"""
     try:
         with st.spinner('Loading data...'):
-            client = GoogleAPIClient(config['credentials_path'])
+             credentials = service_account.Credentials.from_service_account_info(
+                config['credentials'],
+                scopes=['https://www.googleapis.com/auth/drive.readonly',
+                       'https://www.googleapis.com/auth/spreadsheets.readonly']
+            )
+            client = GoogleAPIClient(credentials)  
             processor = XParkyProcessor(client)
             
             final_df, _, _ = processor.process_all_data(
