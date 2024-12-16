@@ -71,10 +71,10 @@ def load_config():
     load_dotenv()
     
     config = {
-        'credentials_path': os.getenv('GOOGLE_CREDENTIALS_PATH'),
-        'classroom_folder_id': os.getenv('CLASSROOM_FOLDER_ID'),
-        'eval_forms_folder_id': os.getenv('EVAL_FORMS_FOLDER_ID'),
-        'certificates_main_folder_id': os.getenv('CERTIFICATES_FOLDER_ID')  # Main Certificates folder ID
+        'credentials': st.serets['GOOGLE_CREDENTIALS'],
+        'classroom_folder_id': st.secrets['CLASSROOM_FOLDER_ID'],
+        'eval_forms_folder_id': st.secrets['EVAL_FORMS_FOLDER_ID'],
+        'certificates_main_folder_id': st.seccets['CERTIFICATES_FOLDER_ID']  # Main Certificates folder ID
     }
     
     if missing_vars := [key for key, value in config.items() if not value]:
@@ -86,7 +86,7 @@ def fetch_data(config):
     """Fetch and process XParky data"""
     try:
         with st.spinner('Loading data...'):
-            client = GoogleAPIClient(config['credentials_path'])
+            client = GoogleAPIClient(config['credentials'])
             processor = XParkyProcessor(client)
             
             final_df, _, _ = processor.process_all_data(
@@ -203,7 +203,7 @@ def main():
     config = load_config()
     
     # Initialize clients and processors
-    client = GoogleAPIClient(config['credentials_path'])
+    client = GoogleAPIClient(config['credentials'])
     xparky_processor = XParkyProcessor(client)
     cert_processor = CertificateProcessor(client)
     
