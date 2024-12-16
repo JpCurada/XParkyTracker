@@ -202,7 +202,12 @@ def main():
     config = load_config()
     
     # Initialize clients and processors
-    client = GoogleAPIClient(config['credentials'])
+    credentials = service_account.Credentials.from_service_account_info(
+        config['credentials'],
+        scopes=['https://www.googleapis.com/auth/drive.readonly',
+               'https://www.googleapis.com/auth/spreadsheets.readonly']
+    )
+    client = GoogleAPIClient(credentials)  
     xparky_processor = XParkyProcessor(client)
     cert_processor = CertificateProcessor(client)
     
