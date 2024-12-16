@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
-import os
 import io
 from PIL import Image
-from google.oauth2 import service_account
 from googleapiclient.http import MediaIoBaseDownload
 from src.client import GoogleAPIClient
 from src.processors import XParkyProcessor, CertificateProcessor
@@ -63,30 +61,26 @@ def init_streamlit():
     """, unsafe_allow_html=True)
 
 def initialize_google_client():
-    """Initialize Google API client with proper credentials"""
+    """Initialize Google API client with Streamlit secrets"""
     try:
-        credentials_info = st.secrets["GOOGLE_CREDENTIALS"]
-        credentials = service_account.Credentials.from_service_account_info(
-            credentials_info,
-            scopes=[
-                'https://www.googleapis.com/auth/drive.readonly',
-                'https://www.googleapis.com/auth/spreadsheets.readonly'
-            ]
-        )
-        return GoogleAPIClient(credentials)
+        client = GoogleAPIClient(st.secrets["GOOGLE_CREDENTIALS"])
+        return client
     except Exception as e:
         st.error(f"Failed to initialize Google client: {str(e)}")
+        st.info("Please check if GOOGLE_CREDENTIALS is properly set in Streamlit secrets")
         st.stop()
 
 def load_config():
     """Load and validate environment variables"""
     load_dotenv()
     
-    config = {
-        'classroom_folder_id': st.secrets.get("CLASSROOM_FOLDER_ID"),
-        'eval_forms_folder_id': st.secrets.get("EVAL_FORMS_FOLDER_ID"),
-        'certificates_main_folder_id': st.secrets.get('CERTIFICATES_FOLDER_ID')
-    }
+    required_secrets = [
+        "CLASSROOM_FOLDER_ID",
+        "EVAL_FORMS_FOLDER_ID",
+        "CERTIFICATES_FOLDER_ID"
+    ]
+    
+    config = {key: st.secrets.get(key) for key in required_secrets}
     
     if missing_vars := [key for key, value in config.items() if not value]:
         st.error(f"Missing configuration variables: {', '.join(missing_vars)}")
@@ -100,8 +94,8 @@ def fetch_data(client: GoogleAPIClient, config: dict) -> pd.DataFrame:
         with st.spinner('Loading data...'):
             processor = XParkyProcessor(client)
             final_df, _, _ = processor.process_all_data(
-                config['classroom_folder_id'],
-                config['eval_forms_folder_id']
+                config['CLASSROOM_FOLDER_ID'],
+                config['EVAL_FORMS_FOLDER_ID']
             )
             return final_df
     except Exception as e:
@@ -194,7 +188,7 @@ def display_certificate(client: GoogleAPIClient, file_id: str, name: str):
 
 def handle_certificates_tab(client: GoogleAPIClient, cert_processor: CertificateProcessor, config: dict):
     """Handle the certificates tab functionality"""
-    event_folders = get_event_folders(cert_processor, config['certificates_main_folder_id'])
+    event_folders = get_event_folders(cert_processor, config['CERTIFICATES_FOLDER_ID'])
     
     if not event_folders:
         st.error("No event folders found.")
