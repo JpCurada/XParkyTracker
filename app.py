@@ -71,10 +71,10 @@ def load_config():
     load_dotenv()
     
     config = {
-        'credentials_path': os.getenv('GOOGLE_CREDENTIALS_PATH'),
-        'classroom_folder_id': os.getenv('CLASSROOM_FOLDER_ID'),
-        'eval_forms_folder_id': os.getenv('EVAL_FORMS_FOLDER_ID'),
-        'certificates_main_folder_id': os.getenv('CERTIFICATES_FOLDER_ID')  # Main Certificates folder ID
+        'credentials_path': st.secrets['GOOGLE_CREDENTIALS_PATH')],
+        'classroom_folder_id': st.secrets['CLASSROOM_FOLDER_ID'],
+        'eval_forms_folder_id': st.secrets['EVAL_FORMS_FOLDER_ID'],
+        'certificates_main_folder_id': st.secrets['CERTIFICATES_FOLDER_ID']  # Main Certificates folder ID
     }
     
     if missing_vars := [key for key, value in config.items() if not value]:
