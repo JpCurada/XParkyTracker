@@ -177,7 +177,7 @@ def display_certificate(client: GoogleAPIClient, file_id: str, name: str):
         
         # Display certificate
         image = Image.open(fh)
-        st.image(image, caption=f"Thank you for attending the session, {name}! Don't forget to use #GDGPUP25 & #DataMLTeam when you post this at your LinkedIn or Facebook.", use_container_width=True)
+        st.image(image, caption=f"Thank you for attending the session, {name}! Don't forget to use #GDGPUP25 & #DataMLTeam when you post this at your socials", use_container_width=True)
         
         # Download button
         fh.seek(0)
