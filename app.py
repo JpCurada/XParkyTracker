@@ -150,6 +150,44 @@ def display_xparky_table(df: pd.DataFrame):
         mime="text/csv",
     )
 
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def get_event_folders(_cert_processor: CertificateProcessor, main_folder_id: str):
+    """Cache the event folders mapping"""
+    return _cert_processor.get_event_folders(main_folder_id)
+
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def get_certificates_for_event(_cert_processor: CertificateProcessor, event_folder_id: str):
+    """Cache the certificates mapping for an event"""
+    return _cert_processor.get_certificates_for_event(event_folder_id)
+
+def display_certificate(client: GoogleAPIClient, file_id: str, name: str):
+    """Display and enable download of certificate"""
+    try:
+        request = client.drive_service.files().get_media(fileId=file_id)
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+            
+        fh.seek(0)
+        
+        # Display certificate
+        image = Image.open(fh)
+        st.image(image, caption=f"Certificate for {name}", use_container_width=True)
+        
+        # Download button
+        fh.seek(0)
+        st.download_button(
+            label="Download Certificate",
+            data=fh,
+            file_name=f"{name}_certificate.png",
+            mime="image/png"
+        )
+        
+    except Exception as e:
+        st.error(f"Error displaying certificate: {str(e)}")
+
 def main():
     # Initialize app
     init_streamlit()
