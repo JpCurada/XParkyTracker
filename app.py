@@ -1,15 +1,17 @@
 import streamlit as st
 import pandas as pd
 import os
-from google.oauth2 import service_account
 from src.client import GoogleAPIClient
-from src.processors import XParkyProcessor
+from src.processors import XParkyProcessor, CertificateProcessor
+from googleapiclient.http import MediaIoBaseDownload
+import io
+from PIL import Image
 from dotenv import load_dotenv
 
 def init_streamlit():
     """Initialize Streamlit page configuration and styling"""
     st.set_page_config(
-        page_title="XParky Tracker",
+        page_title="Student Portal",
         page_icon="📊",
         layout="wide",
         initial_sidebar_state="auto"
@@ -52,6 +54,15 @@ def init_streamlit():
         .stProgress > div > div > div {
             background-color: #4284f2 !important;
         }
+
+        /* Certificate container */
+        .certificate-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -60,9 +71,10 @@ def load_config():
     load_dotenv()
     
     config = {
-        'credentials': st.secrets["GOOGLE_CREDENTIALS"],
-        'classroom_folder_id': st.secrets["CLASSROOM_FOLDER_ID"],
-        'eval_forms_folder_id': st.secrets["EVAL_FORMS_FOLDER_ID"]
+        'credentials_path': os.getenv('GOOGLE_CREDENTIALS_PATH'),
+        'classroom_folder_id': os.getenv('CLASSROOM_FOLDER_ID'),
+        'eval_forms_folder_id': os.getenv('EVAL_FORMS_FOLDER_ID'),
+        'certificates_main_folder_id': os.getenv('CERTIFICATES_FOLDER_ID')  # Main Certificates folder ID
     }
     
     if missing_vars := [key for key, value in config.items() if not value]:
@@ -70,17 +82,11 @@ def load_config():
         st.stop()
     
     return config
-
 def fetch_data(config):
     """Fetch and process XParky data"""
     try:
         with st.spinner('Loading data...'):
-            credentials = service_account.Credentials.from_service_account_info(
-                config['credentials'],
-                scopes=['https://www.googleapis.com/auth/drive.readonly',
-                       'https://www.googleapis.com/auth/spreadsheets.readonly']
-            )
-            client = GoogleAPIClient(credentials)  
+            client = GoogleAPIClient(config['credentials_path'])
             processor = XParkyProcessor(client)
             
             final_df, _, _ = processor.process_all_data(
@@ -137,7 +143,7 @@ def display_xparky_table(df: pd.DataFrame):
         hide_index=True,
         use_container_width=True,
         disabled=True,
-
+        height=2000
     )
 
     # Download button
@@ -147,6 +153,44 @@ def display_xparky_table(df: pd.DataFrame):
         file_name="xparky_points.csv",
         mime="text/csv",
     )
+
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def get_event_folders(_cert_processor: CertificateProcessor, main_folder_id: str):
+    """Cache the event folders mapping"""
+    return _cert_processor.get_event_folders(main_folder_id)
+
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def get_certificates_for_event(_cert_processor: CertificateProcessor, event_folder_id: str):
+    """Cache the certificates mapping for an event"""
+    return _cert_processor.get_certificates_for_event(event_folder_id)
+
+def display_certificate(client: GoogleAPIClient, file_id: str, name: str):
+    """Display and enable download of certificate"""
+    try:
+        request = client.drive_service.files().get_media(fileId=file_id)
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+            
+        fh.seek(0)
+        
+        # Display certificate
+        image = Image.open(fh)
+        st.image(image, caption=f"Certificate for {name}", use_container_width=True)
+        
+        # Download button
+        fh.seek(0)
+        st.download_button(
+            label="Download Certificate",
+            data=fh,
+            file_name=f"{name}_certificate.png",
+            mime="image/png"
+        )
+        
+    except Exception as e:
+        st.error(f"Error displaying certificate: {str(e)}")
 
 def main():
     # Initialize app
@@ -158,16 +202,66 @@ def main():
     # Get configuration
     config = load_config()
     
-    # Fetch and display data
-    df = fetch_data(config)
-
-    col1, col2, col3 = st.columns([1,4,1])
-    with col1:
-        st.empty()
-    with col2:
-        display_xparky_table(df)
-    with col3:
-        st.empty()
+    # Initialize clients and processors
+    client = GoogleAPIClient(config['credentials_path'])
+    xparky_processor = XParkyProcessor(client)
+    cert_processor = CertificateProcessor(client)
+    
+    # Create tabs
+    tab1, tab2 = st.tabs(["XParky Points", "Certificates"])
+    
+    with tab1:
+        # XParky points functionality
+        col1, col2, col3 = st.columns([1,3,1])
+        with col2:
+            df = fetch_data(config)
+            display_xparky_table(df)
+    
+    with tab2:
+        col1_, col2_, col3_ = st.columns([1,3,1])
+        with col2_:
+            # Get event folders
+            event_folders = get_event_folders(cert_processor, config['certificates_main_folder_id'])
+            
+            if not event_folders:
+                st.error("No event folders found.")
+                return
+                
+            # Event selection
+            event_names = sorted(event_folders.keys())
+            selected_event = st.selectbox(
+                "Select Event",
+                options=event_names,
+                index=None,
+                placeholder="Choose an event..."
+            )
+            
+            if selected_event:
+                # Get certificates for selected event
+                certificates = get_certificates_for_event(
+                    cert_processor, 
+                    event_folders[selected_event]
+                )
+                
+                if not certificates:
+                    st.warning("No certificates found for this event.")
+                    return
+                    
+                # Name selection
+                available_names = sorted(cert_processor.get_available_names(certificates))
+                selected_name = st.selectbox(
+                    "Enter your Name",
+                    options=available_names,
+                    index=None,
+                    placeholder="Choose your name..."
+                )
+                
+                if selected_name:
+                    file_id = certificates.get(selected_name.lower())
+                    if file_id:
+                        display_certificate(client, file_id, selected_name)
+                    else:
+                        st.error("Certificate not found. Please contact support.")
 
 if __name__ == "__main__":
     main()
