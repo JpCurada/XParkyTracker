@@ -209,7 +209,7 @@ def main():
     config = load_config()
     
     # Initialize clients and processors
-    client = GoogleAPIClient(config['credentials_path'])
+    client = GoogleAPIClient(config['credentials'])
     xparky_processor = XParkyProcessor(client)
     cert_processor = CertificateProcessor(client)
     
