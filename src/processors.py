@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import pandas as pd
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 from .client import GoogleAPIClient
 
 @dataclass
@@ -28,7 +28,6 @@ class XParkyProcessor:
                 return None
                 
             # Clean the data
-            df = df[df["Position"] == "Data and ML Cadet"] # Ensure that only Data and ML cadets are included
             df['Student Number'] = df['Student Number'].astype(str).str.strip()
             df['First Name'] = df['First Name'].str.strip()
             df['Last Name'] = df['Last Name'].str.strip()
@@ -47,7 +46,6 @@ class XParkyProcessor:
         try:
             # Get student database
             db_df = self.get_student_database()
-        
             if db_df is None:
                 return points_df
             
@@ -108,21 +106,12 @@ class XParkyProcessor:
     
     def process_classroom_submission(self, folder_id: str) -> pd.DataFrame:
         """Process classroom submissions and calculate points."""
-        folders = self.client.list_files_in_folder(folder_id)
-
-        classroom_submission_folders_id = [folder_dict['id'] for folder_dict in folders if folder_dict['name'].strip() != 'evaluationForms']
-        
-        files = []
-        for folder_id in classroom_submission_folders_id: 
-            files.extend(self.client.list_files_in_folder(folder_id))
-        
+        files = self.client.list_files_in_folder(folder_id)
         points_dict = {}
-
-        unique_file_names = list(set([file_info['name'] for file_info in files]))
         
-        for file_name in unique_file_names:
+        for file_info in files:
             try:
-                file_name = file_name.upper()
+                file_name = file_info['name'].upper()
                 if not any(keyword in file_name for keyword in ['CERTIFICATE', 'BADGE', 'PROJECT']):
                     continue
                 
@@ -133,8 +122,8 @@ class XParkyProcessor:
                 points_dict[student_number] = points_dict.get(student_number, 0) + points
                 
             except Exception as e:
-                print(f"Error processing {file_name}: {str(e)}")
-                    
+                print(f"Error processing {file_info['name']}: {str(e)}")
+                
         return self._create_points_dataframe(points_dict)
     
     def _create_points_dataframe(self, points_dict: Dict) -> pd.DataFrame:
@@ -170,3 +159,88 @@ class XParkyProcessor:
             return (pd.DataFrame(columns=['Student Number', 'First Name', 'Last Name', 'XParky Points']),
                    pd.DataFrame(columns=['Student Number', 'XParky Points']),
                    pd.DataFrame(columns=['Student Number', 'XParky Points']))
+        
+class CertificateProcessor:
+    def __init__(self, client: GoogleAPIClient):
+        """Initialize CertificateProcessor with Google API client."""
+        self.client = client
+
+    def get_event_folders(self, main_folder_id: str) -> Dict[str, str]:
+        """
+        Get all event folders from the Certificates folder.
+        
+        Args:
+            main_folder_id (str): Main Google Drive folder ID
+            
+        Returns:
+            Dict[str, str]: Mapping of event names to folder IDs
+        """
+        try:
+            results = self.client.drive_service.files().list(
+                q=f"'{main_folder_id}' in parents",
+                fields="files(id, name, mimeType)",
+                pageSize=1000
+            ).execute()
+            
+            folders = results.get('files', [])
+            events = {}
+            for folder in folders:
+                events[folder['name']] = folder['id']
+            
+            return events
+            
+        except Exception as e:
+            return {}
+
+    def get_certificates_for_event(self, event_folder_id: str) -> Dict[str, str]:
+        """
+        Get certificates from the PNG subfolder of an event.
+        
+        Args:
+            event_folder_id (str): Event folder ID
+            
+        Returns:
+            Dict[str, str]: Mapping of names to file IDs
+        """
+        try:
+            results = self.client.drive_service.files().list(
+                q=f"'{event_folder_id}' in parents",
+                fields="files(id, name, mimeType)",
+                pageSize=1000
+            ).execute()
+            
+            files = results.get('files', [])
+            
+            # Look for PNG folder first
+            png_folder = None
+            for folder in files:
+                if (folder['name'].lower() == 'png' and 
+                    folder['mimeType'] == 'application/vnd.google-apps.folder'):
+                    png_folder = folder
+                    break
+            
+            if png_folder:
+                # If PNG folder exists, get certificates from it
+                png_results = self.client.drive_service.files().list(
+                    q=f"'{png_folder['id']}' in parents",
+                    fields="files(id, name)",
+                    pageSize=1000
+                ).execute()
+                certificate_files = png_results.get('files', [])
+            else:
+                # If no PNG folder, look for PNG files directly in event folder
+                certificate_files = [f for f in files if f['name'].lower().endswith('.png')]
+            
+            # Create mapping of names to file IDs
+            return {
+                f['name'].split('.')[0].lower(): f['id'] 
+                for f in certificate_files 
+                if '.' in f['name']
+            }
+            
+        except Exception as e:
+            return {}
+
+    def get_available_names(self, certificates: Dict[str, str]) -> List[str]:
+        """Get list of available names from certificates."""
+        return [name.title() for name in certificates.keys()]
