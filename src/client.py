@@ -2,26 +2,17 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import pandas as pd
 from typing import Optional, List, Dict
-from streamlit.runtime.state.session_state import AttrDict
 
 class GoogleAPIClient:
     """Client for accessing Google Drive and Sheets APIs."""
     
-    def __init__(self, credentials_dict: AttrDict):
+    def __init__(self, credentials):
         """Initialize Google API client with service account credentials."""
         self.SCOPES = [
             'https://www.googleapis.com/auth/drive.readonly',
             'https://www.googleapis.com/auth/spreadsheets.readonly'
         ]
-        
-        # Convert AttrDict to regular dict and create credentials object
-        credentials_info = dict(credentials_dict)
-        self.credentials = service_account.Credentials.from_service_account_info(
-            credentials_info,
-            scopes=self.SCOPES
-        )
-        
-        # Initialize services with the credentials
+        self.credentials = credentials
         self.drive_service = build('drive', 'v3', credentials=self.credentials)
         self.sheets_service = build('sheets', 'v4', credentials=self.credentials)
         
