@@ -84,10 +84,7 @@ XParkyTracker/
    ```
 
 4. Configure Google Sheets credentials:
-   - Set up Google Cloud Project
-   - Enable Google Sheets API and Google Drive API 
-   - Configure credentials
-   - Set environment variables for authentication
+   - Reach out to me for credentials
 
 ## Usage
 
